@@ -1,12 +1,17 @@
 {
-  "name": "create-dhow-app",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+    "name": "create-dhow-app",
+    "version": "1.0.0",
+    "description": "",
+    "main": "./index.js",
+    "bin": {
+        "dhow": "./index.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "degit": "^2.8.0",
+        "minimist": "^1.2.5",
+        "ora": "^4.0.4"
+    }
 }
