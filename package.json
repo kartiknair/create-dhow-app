@@ -1,14 +1,14 @@
 {
     "name": "create-dhow-app",
     "version": "1.0.0",
-    "description": "",
+    "description": "Bootstrap a Dhow project in seconds",
     "main": "./index.js",
     "bin": {
-        "dhow": "./index.js"
+        "create-dhow-app": "./index.js"
     },
     "keywords": [],
-    "author": "",
-    "license": "ISC",
+    "author": "https://kartikn.me",
+    "license": "MIT",
     "dependencies": {
         "degit": "^2.8.0",
         "minimist": "^1.2.5",
