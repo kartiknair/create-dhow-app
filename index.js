@@ -22,7 +22,7 @@ if (!directory) {
     process.chdir(join(process.cwd(), directory))
 }
 
-let template = 'blog'
+let template = 'basic'
 
 if (args.template && !templates.includes(args.template)) {
     console.log('This template does not exist')

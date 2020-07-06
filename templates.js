@@ -1,1 +1,1 @@
-module.exports = ['blog', 'portfolio']
+module.exports = ['basic', 'blog', 'portfolio']
