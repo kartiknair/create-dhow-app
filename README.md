@@ -10,7 +10,7 @@ npm i -g create-dhow-app
 create-dhow-app <dir>
 ```
 
-There are only two other options:
+These are the options you have:
 
 ```shell
 Options
