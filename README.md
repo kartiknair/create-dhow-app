@@ -3,17 +3,26 @@
 Quickly bootstrap a [Dhow](https://github.com/kartiknair/dhow) project.
 
 ```shell
-npx create-dhow-app apps-name
+npx create-dhow-app <dir>
+
+# For older npm versions:
+npm i -g create-dhow-app
+create-dhow-app <dir>
 ```
 
-You can also specify a template.
+These are the options you have:
 
 ```shell
-npx create-dhow-app apps-name --template blog
+Options
+    -t, --template    Choose a template to use  (default basic)
+    -un, --use-npm    Use npm instead of yarn, which is default
+    -v, --version     Displays current version
+    -h, --help        Displays this message
+
+Examples
+    $ create-dhow-app website
+    $ create-dhow-app my-blog --template blog
+    $ create-dhow-app www --template tailwind --use-npm
 ```
 
-Currently there are only three template:
-
-1. basic (the default one)
-2. blog
-3. portfolio
+List of templates can be found by checking [the examples folder of the Dhow repo](https://github.com/kartiknair/dhow/tree/master/examples)
