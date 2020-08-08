@@ -1,65 +1,124 @@
 #!/usr/bin/env node
 
-const args = require('minimist')(process.argv.slice(2))
-const degit = require('degit')
-const templates = require('./templates')
-const { join } = require('path')
-const { existsSync, mkdirSync } = require('fs')
-const { exec } = require('child_process')
+const got = require('got')
 const ora = require('ora')
 const chalk = require('chalk')
+const daegr = require('daegr')
+const sade = require('sade')
+const spawn = require('cross-spawn')
+const { execSync } = require('child_process')
+const { existsSync } = require('fs')
+const { resolve } = require('path')
 
-const directory = args._[0]
+sade('create-dhow-app <dir>', true)
+    .version('2.0.0')
+    .describe('Bootstrap a Dhow app')
+    .example('website')
+    .example('my-blog --template blog')
+    .example('www --template tailwind --use-npm')
+    .option('-t, --template', 'Choose a template to use', 'basic')
+    .option('-un, --use-npm', 'Use npm instead of yarn, which is default')
+    .action(createDhowApp)
+    .parse(process.argv)
 
-if (!directory) {
-    console.log('No directory specified')
-    process.exit(-1)
-} else if (existsSync(join(process.cwd(), directory))) {
-    console.log('Directory already exists')
-    process.exit(-1)
-} else {
-    mkdirSync(join(process.cwd(), directory))
-    process.chdir(join(process.cwd(), directory))
-}
+async function createDhowApp(
+    directory,
+    { template = 'basic', un: useNpm = false }
+) {
+    console.log(
+        `\nBootstrapping Dhow project using template: ${chalk.greenBright(
+            template
+        )}\n`
+    )
 
-let template = 'basic'
+    const downloadSpinner = ora('Downloading files...').start()
 
-if (args.template && !templates.includes(args.template)) {
-    console.log('This template does not exist')
-    process.exit(-1)
-} else if (args.template && templates.includes(args.template)) {
-    template = args.template
-}
+    const res = await got(
+        'https://api.github.com/repos/kartiknair/dhow/contents/examples'
+    )
 
-const emitter = degit(`kartiknair/dhow/examples/${template}`, {
-    cache: false,
-    force: true,
-    verbose: true,
-})
+    const templates = JSON.parse(res.body).map((template) => template.name)
 
-const cloneSpinner = ora('Getting files...')
+    if (template && !templates.includes(template)) {
+        console.log(`\n${chalk.red(template)} is not an available template`)
+        process.exit(1)
+    }
 
-emitter.clone(process.cwd()).then(() => {
-    cloneSpinner.succeed('Done cloning files')
+    if (directory !== '.' && existsSync(directory)) {
+        console.log(
+            `\n${chalk.red(
+                'The directory already exists.'
+            )}\n\nIf you would like to create a project inside that directory,\n${chalk.cyan(
+                '`cd`'
+            )} into it & use '.' as the directory argument`
+        )
+        process.exit(1)
+    }
 
-    const dependaSpinner = ora('Downloading dependencies').start()
-    exec('npm install', (err) => {
-        if (err) {
-            dependaSpinner.fail(err)
-            console.error(err)
-            process.exit(-1)
-        }
+    try {
+        await daegr({
+            username: 'kartiknair',
+            repo: 'dhow',
+            path: `examples/${template}`,
+            directory,
+        })
 
-        dependaSpinner.succeed('Done installing dependancies')
+        downloadSpinner.succeed('Successfully downloaded files')
+
+        const packageManager = useNpm ? 'npm' : shouldUseYarn() ? 'yarn' : 'npm'
 
         console.log(
-            '\nProject was succesfully bootstrapped. Here are the commands you have available:'
+            `Installing dependancies with ${chalk.cyan(
+                `${`\`${packageManager}\``}`
+            )}`
         )
-        console.log(chalk.gray('\n    Get started by changing directories:'))
-        console.log(chalk.cyanBright(`\n        cd ${directory}`))
-        console.log(chalk.gray('\n\n    Start the dev server:'))
-        console.log(chalk.cyanBright(`\n        npm run dev`))
-        console.log(chalk.gray('\n\n    Build production-ready static files:'))
-        console.log(chalk.cyanBright(`\n        npm run build`))
-    })
-})
+
+        const install = spawn(packageManager, ['install'], {
+            cwd: resolve(directory),
+            stdio: 'inherit',
+        })
+
+        install.on('close', (code) => {
+            if (code === 0) {
+                console.log(
+                    '\nProject was succesfully bootstrapped. Here are the commands you have available:'
+                )
+                console.log(
+                    chalk.gray('\n    Get started by changing directories:')
+                )
+                console.log(chalk.cyanBright(`\n        cd ${directory}`))
+                console.log(chalk.gray('\n\n    Start the dev server:'))
+                console.log(
+                    chalk.cyanBright(
+                        `\n        ${
+                            packageManager === 'npm' ? 'npm run' : 'yarn'
+                        } dev`
+                    )
+                )
+                console.log(
+                    chalk.gray('\n\n    Build production-ready static files:')
+                )
+                console.log(
+                    chalk.cyanBright(
+                        `\n        ${
+                            packageManager === 'npm' ? 'npm run' : 'yarn'
+                        } build`
+                    )
+                )
+            }
+        })
+    } catch (err) {
+        downloadSpinner.fail(err)
+        console.error(err)
+        process.exit(-1)
+    }
+}
+
+function shouldUseYarn() {
+    try {
+        execSync('yarnpkg --version', { stdio: 'ignore' })
+        return true
+    } catch (e) {
+        return false
+    }
+}
